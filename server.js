@@ -16,9 +16,11 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log("✨ [SYSTEM]: MongoDB Data-Link Established"))
     .catch((err) => console.log("❌ [SYSTEM]: Connection Failed", err));
 
-// 🔥 STICKLY UPDATED: CORS fixed for Mobile & Browser strict rules
+// 🔥 FIXED VERSION: Added missing comma and cleaned syntax
 app.use(cors({
-    origin: true, // FIX: Dynamic origin allow karta hai bina strict policy break kiye
+    origin: "https://aectarchivefrontend.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"], // 👈 Yahan comma zaroori tha
     credentials: true
 }));
 
