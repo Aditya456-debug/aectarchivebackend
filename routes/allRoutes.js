@@ -49,8 +49,7 @@ const {
     enrollStudent             // 🔥 NEW PHASE 1: Handle student enrollment
 } = require('../controllers/attendanceController');
 
-router.post('/admin/register-faculty', registerFaculty);
-router.post('/faculty/create-lecture', createLecture);
+// 🔥 MISSION FIX: Removed duplicate faculty routes that were causing 404 collisions
 router.get('/student/faculties', getFaculties);
 router.post('/student/login', studentLogin);
 router.post('/student/register', registerStudent);
