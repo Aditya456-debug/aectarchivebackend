@@ -16,7 +16,7 @@ const {
     activateStudentVault // ✨ STICKLY ADDED: Imported for Zero-Entry Activation
 } = require('../controllers/studentController');
 
-const { protect } = require('../middleware/authMiddleware');
+const { protect } = require('../Middleware/authMiddleware');
 
 const multer = require('multer');
 const storage = multer.memoryStorage(); 
