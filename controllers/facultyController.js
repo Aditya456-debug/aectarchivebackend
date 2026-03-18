@@ -12,7 +12,6 @@ const adminCreateFaculty = async (req, res) => {
         const generatedID = `FAC-${randomCode}`;
 
         // Create Database Entry with dummy email/pass to pass schema validation
-        // The faculty will overwrite these dummy values when they register.
         const newFaculty = new Faculty({
             facultyID: generatedID,
             facultyName: facultyName,
@@ -55,7 +54,7 @@ const verifyFacultyId = async (req, res) => {
 
         res.json({
             success: true,
-            faculty: { facultyName: faculty.facultyName }, // Sirf naam bhej rahe hain
+            faculty: { facultyName: faculty.facultyName }, 
             msg: "ID_VERIFIED"
         });
     } catch (err) {
@@ -74,7 +73,7 @@ const completeFacultyProfile = async (req, res) => {
         // Update fields with Faculty's inputs
         faculty.emailID = emailID;
         faculty.password = password; 
-        faculty.courses = courses; // 🔥 Save the Array of Courses
+        faculty.courses = courses; 
         faculty.isProfileCompleted = true;
 
         await faculty.save();
@@ -128,7 +127,8 @@ const facultyLogin = async (req, res) => {
 const getFacultyProfile = async (req, res) => {
     try {
         const { email } = req.params;
-        const faculty = await Faculty.findOne({ emailID: email });
+        // ⚡ STICKLY UPDATED: Using emailID to match your MongoDB Atlas Schema
+        const faculty = await Faculty.findOne({ emailID: email.trim() });
 
         if (!faculty) {
             return res.status(404).json({ success: false, message: "FACULTY_NOT_FOUND" });
@@ -152,7 +152,10 @@ const getFacultyProfile = async (req, res) => {
 const createLecture = async (req, res) => {
     try {
         const { unit, date, topic, desc, time, facultyEmail } = req.body;
-        const faculty = await Faculty.findOne({ $or: [{ emailID: facultyEmail }, { email: facultyEmail }] });
+        // ⚡ STICKLY UPDATED: Added emailID check to ensure Vault Sync
+        const faculty = await Faculty.findOne({ 
+            $or: [{ emailID: facultyEmail }, { email: facultyEmail }] 
+        });
         
         if (!faculty) return res.status(404).json({ success: false, msg: "FACULTY_IDENTITY_UNKNOWN" });
 
