@@ -7,13 +7,13 @@ const Student = require('../models/Student');
 const facultyRoutes = require('./facultyRoutes');
 
 const { 
-    studentLogin, 
-    registerStudent, 
-    sendRegistrationOTP, 
-    getDashboardInfo,
-    getStudentByRegNo, 
-    completeProfile,
-    activateStudentVault // ✨ STICKLY ADDED: Imported for Zero-Entry Activation
+    studentLogin, 
+    registerStudent, 
+    sendRegistrationOTP, 
+    getDashboardInfo,
+    getStudentByRegNo, 
+    completeProfile,
+    activateStudentVault // ✨ STICKLY ADDED: Imported for Zero-Entry Activation
 } = require('../controllers/studentController');
 
 const { protect } = require('../Middleware/authMiddleware');
@@ -22,31 +22,32 @@ const multer = require('multer');
 const storage = multer.memoryStorage(); 
 
 const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 100 * 1024 * 1024 } 
+    storage: storage,
+    limits: { fileSize: 100 * 1024 * 1024 } 
 });
 
 const { 
-    registerFaculty, 
-    createLecture, 
-    getFaculties, 
-    importExcelStudents,
-    bulkUploadStudents 
+    registerFaculty, 
+    createLecture, 
+    getFaculties, 
+    importExcelStudents,
+    bulkUploadStudents 
 } = require('../controllers/mainController');
 
 const { uploadNote } = require('../controllers/noteController');
 
 // 🛡️ [ATTENDANCE_CONTROLLER_UPLINK]: Strictly Imported (Added getAllStudentsForTable, getFacultyRegisters, deleteMonthlyRegister, updateMonthlyRegister)
 const { 
-    startAttendanceSession, 
-    markAttendance, 
-    getAllStudentsForTable, 
-    getFacultyRegisters,
-    deleteMonthlyRegister,
-    updateMonthlyRegister,
-    getStudentPersonalLedger, // 🔥 ADDED: Imported strictly for Student Dashboard
-    getAvailableSubjects,     // 🔥 NEW PHASE 1: Fetch filtered subjects
-    enrollStudent             // 🔥 NEW PHASE 1: Handle student enrollment
+    startAttendanceSession, 
+    markAttendance, 
+    getAllStudentsForTable, 
+    getFacultyRegisters,
+    deleteMonthlyRegister,
+    updateMonthlyRegister,
+    getStudentPersonalLedger, // 🔥 ADDED: Imported strictly for Student Dashboard
+    getAvailableSubjects,     // 🔥 NEW PHASE 1: Fetch filtered subjects
+    enrollStudent,            // 🔥 NEW PHASE 1: Handle student enrollment
+    getSessionStatus          // 🔥 NEW: For Live Ledger Polling
 } = require('../controllers/attendanceController');
 
 // 🔥 MISSION FIX: Removed duplicate faculty routes that were causing 404 collisions
@@ -64,12 +65,12 @@ router.post('/student/complete-profile', completeProfile);
 router.post('/student/activate', activateStudentVault); 
 
 router.get('/admin/students', async (req, res) => {
-    try {
-        const students = await Student.find().sort({ registeredAt: -1 });
-        res.json(students);
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Vault Access Denied" });
-    }
+    try {
+        const students = await Student.find().sort({ registeredAt: -1 });
+        res.json(students);
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Vault Access Denied" });
+    }
 });
 
 router.post('/admin/import-excel', upload.single('excelFile'), importExcelStudents);
@@ -77,16 +78,16 @@ router.post('/admin/bulk-upload', upload.single('file'), bulkUploadStudents);
 router.post('/upload-note', upload.single('file'), uploadNote);
 
 router.get('/notes/fetch-notes', async (req, res) => {
-  try {
-    const notes = await Note.find().sort({ uploadedAt: -1 });
-    res.json(notes);
-  } catch (err) {
-    res.status(500).json({ error: "Vault Fetch Failed" });
-  }
+  try {
+    const notes = await Note.find().sort({ uploadedAt: -1 });
+    res.json(notes);
+  } catch (err) {
+    res.status(500).json({ error: "Vault Fetch Failed" });
+  }
 });
 
 router.post('/verify-download', (req, res) => {
-    res.json({ success: true }); 
+    res.json({ success: true }); 
 });
 
 // --- 🔥 ATTENDANCE REGISTER ROUTES (ACTIVATED) ---
@@ -113,6 +114,9 @@ router.get('/attendance/personal-ledger', getStudentPersonalLedger);
 // 7. 🔥 NEW PHASE 1: Enrollment Routes
 router.get('/attendance/available-subjects', getAvailableSubjects);
 router.post('/attendance/enroll-student', enrollStudent);
+
+// 8. 🔥 NEW: Live Ledger Polling Route (For Auto-Updating "P" and "A")
+router.get('/attendance/session-status', getSessionStatus);
 
 // 🔥 NEW UPLINK: Faculty Routes ko '/faculty' base path ke sath active kar diya
 router.use('/faculty', facultyRoutes);

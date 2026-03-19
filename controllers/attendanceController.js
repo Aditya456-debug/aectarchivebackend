@@ -306,6 +306,32 @@ const enrollStudent = async (req, res) => {
     }
 };
 
+// 🔥 NEW: LIVE POLLING LOGIC (For Real-time Ledger Update)
+const getSessionStatus = async (req, res) => {
+    try {
+        const { facultyEmail, subjectName, date } = req.query;
+        
+        // Find the specific session for that day
+        const session = await Attendance.findOne({ 
+            facultyEmail, 
+            subjectName: subjectName.toUpperCase(),
+            date: date 
+        });
+
+        if (!session) {
+            return res.json({ success: true, presentStudents: [] });
+        }
+
+        // Return the array of present students
+        res.json({ success: true, presentStudents: session.presentStudents });
+        
+    } catch (error) {
+        console.error("Live Polling Error:", error);
+        res.status(500).json({ success: false, msg: "Error fetching live status" });
+    }
+};
+
+
 module.exports = { 
     startAttendanceSession, 
     markAttendance, 
@@ -316,5 +342,6 @@ module.exports = {
     getMonthlyLedgerData,
     getStudentPersonalLedger,
     getAvailableSubjects,
-    enrollStudent
+    enrollStudent,
+    getSessionStatus // 🔥 Make sure this is exported!
 };
