@@ -31,7 +31,8 @@ const {
     createLecture, 
     getFaculties, 
     importExcelStudents,
-    bulkUploadStudents 
+    bulkUploadStudents,
+    assignFaculty // 🔥 FIX: Admin se faculty assign karne ke liye imported
 } = require('../controllers/mainController');
 
 const { uploadNote } = require('../controllers/noteController');
@@ -47,7 +48,7 @@ const {
     getStudentPersonalLedger, // 🔥 ADDED: Imported strictly for Student Dashboard
     getAvailableSubjects,     // 🔥 NEW PHASE 1: Fetch filtered subjects
     enrollStudent,            // 🔥 NEW PHASE 1: Handle student enrollment
-    getSessionStatus          // 🔥 NEW: For Live Ledger Polling
+    getSessionStatus          // 🔥 NEW: For Live Ledger Polling
 } = require('../controllers/attendanceController');
 
 // 🔥 MISSION FIX: Removed duplicate faculty routes that were causing 404 collisions
@@ -75,6 +76,8 @@ router.get('/admin/students', async (req, res) => {
 
 router.post('/admin/import-excel', upload.single('excelFile'), importExcelStudents);
 router.post('/admin/bulk-upload', upload.single('file'), bulkUploadStudents);
+router.post('/admin/assign-faculty', assignFaculty); // 🔥 FIX: The missing admin route!
+
 router.post('/upload-note', upload.single('file'), uploadNote);
 
 router.get('/notes/fetch-notes', async (req, res) => {
