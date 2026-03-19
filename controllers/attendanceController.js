@@ -68,17 +68,17 @@ const startAttendanceSession = async (req, res) => {
     }
 };
 
-// 2. 👥 Student side: Specific Attendance mark karna (UNTOUCHED)
+// 2. 👥 Student side: Specific Attendance mark karna (🔥 FIXED)
 const markAttendance = async (req, res) => {
     try {
         const { regNo, facultyEmail, subjectName } = req.body;
-        const today = new Date().toLocaleDateString('en-GB');
+        const todayStr = new Date().toLocaleDateString('en-GB');
 
-        // 🔥 Period removed from lookup
+        // 🔥 FIXED: Period aur Date dono hata diye! 
+        // Ab backend seedha check karega ki us class ka Vault active hai ya nahi
         const session = await Attendance.findOne({ 
             facultyEmail, 
-            subjectName, 
-            date: today, 
+            subjectName: subjectName.toUpperCase(), // 🔥 Ensure UpperCase match!
             isActive: true 
         });
 
@@ -86,7 +86,11 @@ const markAttendance = async (req, res) => {
             return res.status(404).json({ success: false, msg: "NO_ACTIVE_SESSION: Register is currently locked!" });
         }
 
-        const alreadyMarked = session.presentStudents.find(s => s.regNo === regNo);
+        // 🔥 FIXED: Ab student har din attendance laga payega (Duplicate check sirf aaj ki date ke liye)
+        const alreadyMarked = session.presentStudents.find(
+            s => s.regNo === regNo && new Date(s.markedAt).toLocaleDateString('en-GB') === todayStr
+        );
+        
         if (alreadyMarked) {
             return res.status(400).json({ success: false, msg: "DUPLICATE_ENTRY: Attendance already logged for today!" });
         }
