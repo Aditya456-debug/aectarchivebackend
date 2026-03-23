@@ -20,4 +20,7 @@ router.post('/bulk-upload', upload.single('file'), adminCtrl.bulkUploadStudents)
 // Ye route professors ko specific batches/subjects assign karne ke liye hai
 router.post('/assign-faculty', adminCtrl.assignFaculty);
 
+// 🔥 NEW ZERO-TRUST: Approve Pending Faculty Request from Admin Dashboard
+router.post('/approve-faculty', adminCtrl.approveFaculty);
+
 module.exports = router;

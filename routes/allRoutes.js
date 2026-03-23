@@ -5,6 +5,8 @@ const Student = require('../models/Student');
 
 // 🔥 NEW UPLINK: Naye Faculty Routes ko import kiya
 const facultyRoutes = require('./facultyRoutes');
+// 🔥 NEW UPLINK: Naye Admin Routes ko import kiya (Jisme bulk-upload aur approve-faculty tha)
+const adminRoutes = require('./adminRoutes'); // Make sure this file exists and is named adminRoutes.js
 
 const { 
     studentLogin, 
@@ -26,18 +28,18 @@ const upload = multer({
     limits: { fileSize: 100 * 1024 * 1024 } 
 });
 
+// 🔥 FIX: Removed assignFaculty and bulkUpload from mainController import 
+// Kyunki wo ab adminController/facultyController mein handle ho rahe hain adminRoutes ke zariye.
 const { 
     registerFaculty, 
     createLecture, 
     getFaculties, 
-    importExcelStudents,
-    bulkUploadStudents,
-    assignFaculty // 🔥 FIX: Admin se faculty assign karne ke liye imported
+    importExcelStudents
 } = require('../controllers/mainController');
 
 const { uploadNote } = require('../controllers/noteController');
 
-// 🛡️ [ATTENDANCE_CONTROLLER_UPLINK]: Strictly Imported (Added getAllStudentsForTable, getFacultyRegisters, deleteMonthlyRegister, updateMonthlyRegister)
+// 🛡️ [ATTENDANCE_CONTROLLER_UPLINK]: Strictly Imported
 const { 
     startAttendanceSession, 
     markAttendance, 
@@ -45,26 +47,29 @@ const {
     getFacultyRegisters,
     deleteMonthlyRegister,
     updateMonthlyRegister,
-    getStudentPersonalLedger, // 🔥 ADDED: Imported strictly for Student Dashboard
-    getAvailableSubjects,     // 🔥 NEW PHASE 1: Fetch filtered subjects
-    enrollStudent,            // 🔥 NEW PHASE 1: Handle student enrollment
-    getSessionStatus          // 🔥 NEW: For Live Ledger Polling
+    getStudentPersonalLedger, 
+    getAvailableSubjects,     
+    enrollStudent,            
+    getSessionStatus          
 } = require('../controllers/attendanceController');
 
-// 🔥 MISSION FIX: Removed duplicate faculty routes that were causing 404 collisions
+
+// ==========================================
+// 🎓 STUDENT ROUTES
+// ==========================================
 router.get('/student/faculties', getFaculties);
 router.post('/student/login', studentLogin);
 router.post('/student/register', registerStudent);
 router.post('/student/send-otp', sendRegistrationOTP);
 router.get('/student/dashboard-info', protect, getDashboardInfo);
-
-// ✨ MISSION FIX: Alignment with Student Controller & Frontend (Removed '-identity')
 router.get('/student/verify/:regNo', getStudentByRegNo); 
 router.post('/student/complete-profile', completeProfile);
-
-// 🔥 MISSING LINK FIXED: Added the activation endpoint to stop 404
 router.post('/student/activate', activateStudentVault); 
 
+
+// ==========================================
+// 🛡️ ADMIN SPECIFIC ROUTES (That were cluttering this file)
+// ==========================================
 router.get('/admin/students', async (req, res) => {
     try {
         const students = await Student.find().sort({ registeredAt: -1 });
@@ -73,13 +78,13 @@ router.get('/admin/students', async (req, res) => {
         res.status(500).json({ success: false, message: "Vault Access Denied" });
     }
 });
-
+// ❌ Yahan se assignFaculty aur bulk-upload hata diye kyunki wo ab adminRoutes.js handle karega.
 router.post('/admin/import-excel', upload.single('excelFile'), importExcelStudents);
-router.post('/admin/bulk-upload', upload.single('file'), bulkUploadStudents);
-router.post('/admin/assign-faculty', assignFaculty); // 🔥 FIX: The missing admin route!
 
+// ==========================================
+// 📚 NOTES & MISC ROUTES
+// ==========================================
 router.post('/upload-note', upload.single('file'), uploadNote);
-
 router.get('/notes/fetch-notes', async (req, res) => {
   try {
     const notes = await Note.find().sort({ uploadedAt: -1 });
@@ -88,40 +93,32 @@ router.get('/notes/fetch-notes', async (req, res) => {
     res.status(500).json({ error: "Vault Fetch Failed" });
   }
 });
+router.post('/verify-download', (req, res) => res.json({ success: true })); 
 
-router.post('/verify-download', (req, res) => {
-    res.json({ success: true }); 
-});
-
-// --- 🔥 ATTENDANCE REGISTER ROUTES (ACTIVATED) ---
-
-// 1. Faculty side: Attendance Register "OPEN" karna
+// ==========================================
+// 📊 ATTENDANCE ROUTES
+// ==========================================
 router.post('/attendance/start-session', startAttendanceSession);
-
-// 2. Student side: Register mein apni entry "MARK" karna
 router.post('/attendance/mark-me', markAttendance);
-
-// 3. 🔥 NEW: MongoDB Student Data Fetch (Strictly Added for Manual Table)
 router.get('/attendance/all-students', getAllStudentsForTable);
-
-// 4. 🔥 NEW: Fetch Monthly Registers (Strictly Added for Faculty Dashboard Cards)
 router.get('/attendance/my-registers', getFacultyRegisters);
-
-// 5. 🔥 CRUD OPS: Delete and Update Monthly Registers (Strictly Added)
 router.post('/attendance/delete-register', deleteMonthlyRegister);
 router.post('/attendance/update-register', updateMonthlyRegister);
-
-// 6. 🔥 NEW: Student Personal Ledger Route (Strictly Added)
 router.get('/attendance/personal-ledger', getStudentPersonalLedger);
-
-// 7. 🔥 NEW PHASE 1: Enrollment Routes
 router.get('/attendance/available-subjects', getAvailableSubjects);
 router.post('/attendance/enroll-student', enrollStudent);
-
-// 8. 🔥 NEW: Live Ledger Polling Route (For Auto-Updating "P" and "A")
 router.get('/attendance/session-status', getSessionStatus);
 
-// 🔥 NEW UPLINK: Faculty Routes ko '/faculty' base path ke sath active kar diya
+
+// ==========================================
+// 🔌 MODULAR ROUTE MOUNTS (The Magic Connectors)
+// ==========================================
+// 🔥 Yahan tere baaki saare alag-alag files judenge
+
+// Yeh line ensure karegi ki frontend jo /api/faculty/request-access bhej raha hai wo theek jagah jaye
 router.use('/faculty', facultyRoutes);
+
+// 🔥 NEW: Yeh line ensure karegi ki AdminDashboard se aane wali /api/admin/approve-faculty request fail na ho!
+router.use('/admin', adminRoutes); 
 
 module.exports = router;
