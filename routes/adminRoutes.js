@@ -3,12 +3,20 @@ const router = express.Router();
 
 // 🔥 DONO CONTROLLERS IMPORT KARO
 const adminCtrl = require('../controllers/adminController');
-const mainCtrl = require('../controllers/mainController'); // 👈 assignFaculty yahan se aayega!
+const mainCtrl = require('../controllers/mainController'); 
 const multer = require('multer'); 
 
-const upload = multer({ dest: 'uploads/' });
+// 🚀 UPGRADED MULTER CONFIGURATION
+// Field size limit badha di hai taaki "Field value too long" error na aaye
+const upload = multer({ 
+    dest: 'uploads/',
+    limits: {
+        fieldSize: 25 * 1024 * 1024, // 25MB limit for text fields
+        fileSize: 10 * 1024 * 1024   // 10MB limit for the Excel file itself
+    }
+});
 
-// 🔥 MASTER ADMIN LOGIN ROUTE (NEW SECURE GATEKEEPER)
+// 🔥 MASTER ADMIN LOGIN ROUTE
 router.post('/login', (req, res) => {
     const { email, pass } = req.body;
     
@@ -20,18 +28,18 @@ router.post('/login', (req, res) => {
 });
 
 // Jab koi POST request bheje register karne ke liye
-router.post('/register-faculty', mainCtrl.registerFaculty); // 🔥 Changed to mainCtrl
+router.post('/register-faculty', mainCtrl.registerFaculty); 
 
 // Jab Admin dashboard load ho aur saari faculties dekhni hon
-router.get('/faculties', mainCtrl.getFaculties); // 🔥 Changed to mainCtrl.getFaculties
+router.get('/faculties', mainCtrl.getFaculties); 
 
-// 🔥 NEW: Massive Student Data Upload Route
+// 🔥 FIXED: Bulk Upload Route with Upgraded Limits
 router.post('/bulk-upload', upload.single('file'), adminCtrl.bulkUploadStudents);
 
 // 🔥 MISSION 2: Neural Link (Faculty Assignment) Route
-router.post('/assign-faculty', mainCtrl.assignFaculty); // 🔥 Changed to mainCtrl
+router.post('/assign-faculty', mainCtrl.assignFaculty); 
 
-// 🔥 NEW ZERO-TRUST: Approve Pending Faculty Request from Admin Dashboard
+// 🔥 NEW ZERO-TRUST: Approve Pending Faculty Request
 router.post('/approve-faculty', adminCtrl.approveFaculty);
 
 module.exports = router;
